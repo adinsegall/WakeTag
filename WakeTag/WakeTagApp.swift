@@ -19,21 +19,32 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if model.isOnboarded {
+            // Ringing replaces the whole hierarchy rather than presenting a
+            // cover: a fullScreenCover loses the presentation slot to any open
+            // sheet (alarm editor, settings), while dismantling HomeView tears
+            // its sheets down automatically.
+            if model.isRinging {
+                RingingView()
+            } else if model.isOnboarded {
                 HomeView()
             } else {
                 OnboardingView()
             }
         }
-        .fullScreenCover(isPresented: $model.isRinging) {
-            RingingView()
-        }
         .task {
             await model.observeAlarmUpdates()
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                model.sweepAlertingAlarms()
+            guard phase == .active else { return }
+            model.sweepAlertingAlarms()
+            model.reconcileAlarms()
+            if model.isRinging {
+                // An interruption while suspended defers its `.ended`
+                // notification — kick playback and the volume pin directly.
+                MusicService.shared.resumeIfNeeded()
+                if model.volumeGuardEnabled {
+                    VolumeGuard.shared.reassert()
+                }
             }
         }
         .alert("Something went wrong", isPresented: Binding(

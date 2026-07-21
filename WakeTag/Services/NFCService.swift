@@ -103,10 +103,10 @@ extension NFCService: NFCTagReaderSessionDelegate {
         switch tag {
         case .miFare(let mifare): uidData = mifare.identifier
         case .iso15693(let iso15693): uidData = iso15693.identifier
-        case .iso7816(let iso7816): uidData = iso7816.identifier
-        case .feliCa(let feliCa): uidData = feliCa.currentIDm
-        @unknown default:
-            session.invalidate(errorMessage: "Unsupported tag type.")
+        default:
+            // ISO7816/FeliCa tags require extra Info.plist keys to even be
+            // delivered by CoreNFC; WakeTag supports NTAG/MIFARE + ISO15693.
+            session.invalidate(errorMessage: "Unsupported tag type — use an NTAG213/215/216 tag.")
             return
         }
 

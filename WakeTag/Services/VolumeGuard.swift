@@ -45,6 +45,13 @@ final class VolumeGuard {
         }
     }
 
+    /// Re-pin the volume immediately (used on return to foreground mid-ring,
+    /// since KVO misses changes made while the app was suspended).
+    func reassert() {
+        guard isEngaged else { return }
+        setSystemVolume()
+    }
+
     func disengage() {
         observation?.invalidate()
         observation = nil

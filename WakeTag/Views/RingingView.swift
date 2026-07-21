@@ -74,7 +74,6 @@ struct RingingView: View {
             }
         }
         .onReceive(clock) { now = $0 }
-        .interactiveDismissDisabled()
     }
 
     private func attemptStop() async {
